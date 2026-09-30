@@ -1,0 +1,8 @@
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+pydantic-settings==2.10.1
+python-multipart==0.0.20
+httpx==0.28.1
+pypdf>=6.19.0
+langchain-core>=1.6.6
+langchain-gigachat>=0.5.1
