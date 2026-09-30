@@ -25,6 +25,19 @@ class Settings(BaseSettings):
     allowed_origins: str = Field(
         default="http://localhost:3000", validation_alias="ALLOWED_ORIGINS"
     )
+    # gigachat
+    gigachat_credentials: SecretStr = Field(
+        default=SecretStr(""), validation_alias="GIGACHAT_CREDENTIALS"
+    )
+    gigachat_scope: str = Field(
+        default="GIGACHAT_API_PERS", validation_alias="GIGACHAT_SCOPE"
+    )
+    gigachat_model: str = Field(
+        default="GigaChat-2-Pro", validation_alias="GIGACHAT_MODEL"
+    )
+    gigachat_verify_ssl: bool = Field(
+        default=False, validation_alias="GIGACHAT_VERIFY_SSL"
+    )
 
     @field_validator("database_url")
     @classmethod
