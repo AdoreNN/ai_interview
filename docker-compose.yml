@@ -1,0 +1,59 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-grillo}
+      POSTGRES_USER: ${POSTGRES_USER:-grillo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grillo}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-grillo} -d ${POSTGRES_DB:-grillo}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks:
+      - grillo
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-grillo}:${POSTGRES_PASSWORD:-grillo}@db:5432/${POSTGRES_DB:-grillo}
+      JWT_SECRET: ${JWT_SECRET:-development-only-secret-change-me-123456789}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - grillo
+
+volumes:
+  postgres_data:
+
+networks:
+  grillo:
+    driver: bridge
+
