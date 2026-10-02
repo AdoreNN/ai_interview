@@ -1,12 +1,12 @@
-from typing import TypedDict, Literal
+from typing import Literal, TypedDict
 
 # одно диалогове сообщение
 class Message(TypedDict):
-    role: Literal['user', 'asssistant']
+    role: Literal["user", "assistant"]
     content: str
 
 # общий стейт дял агентов
-class InterviewState(TypedDict):
+class InterviewState(TypedDict, total=False):
     # настройки
     session_id: str
     target_position: str
@@ -19,7 +19,7 @@ class InterviewState(TypedDict):
 
     # резюме
     resume_topics: list[str]
-    resume_expirience: dict[str, int]
+    resume_experience: dict[str, int]
 
     # счетчики для рутирнга
     hr_count: int
@@ -38,4 +38,3 @@ class InterviewState(TypedDict):
     # финал собеса
     final_feedback: dict | None
     finished: bool
-

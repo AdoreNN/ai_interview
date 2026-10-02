@@ -11,3 +11,6 @@ htmlcov/
 .unlazy/
 .unlazy-hook-state.json
 .DS_Store
+frontend/node_modules/
+frontend/dist/
+frontend/*.tsbuildinfo

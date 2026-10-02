@@ -5,6 +5,7 @@ os.environ.setdefault(
     "DATABASE_URL", "postgresql+psycopg://grillo:grillo@127.0.0.1:5432/grillo"
 )
 os.environ.setdefault("JWT_SECRET", "test-secret-with-at-least-thirty-two-characters")
+os.environ.setdefault("LLM_MODE", "stub")
 
 import pytest
 from fastapi.testclient import TestClient
@@ -25,4 +26,3 @@ def reset_database():
 def client() -> TestClient:
     with TestClient(app) as test_client:
         yield test_client
-

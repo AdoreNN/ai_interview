@@ -28,7 +28,7 @@ def test_health_reports_database_failure(client):
     assert response.json()["error"]["code"] == "service_unavailable"
 
 
-def test_openapi_contains_only_planned_application_routes(client):
+def test_openapi_contains_integrated_application_routes(client):
     paths = set(client.get("/openapi.json").json()["paths"])
     assert paths == {
         "/health",
@@ -36,5 +36,8 @@ def test_openapi_contains_only_planned_application_routes(client):
         "/api/v1/auth/sign-in",
         "/api/v1/sessions",
         "/api/v1/sessions/{session_id}",
+        "/api/v1/sessions/{session_id}/resume",
+        "/api/v1/sessions/{session_id}/interview",
+        "/api/v1/sessions/{session_id}/interview/start",
+        "/api/v1/sessions/{session_id}/interview/answer",
     }
-

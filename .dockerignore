@@ -10,4 +10,5 @@ __pycache__
 tests
 openspec
 GATES.md
-
+frontend/node_modules
+frontend/dist

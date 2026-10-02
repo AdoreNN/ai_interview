@@ -21,14 +21,26 @@ def main() -> None:
             "POST /api/v1/sessions",
             "GET /api/v1/sessions",
             "GET /api/v1/sessions/{session_id}",
+            "POST /api/v1/sessions/{session_id}/resume",
+            "POST /api/v1/sessions/{session_id}/interview/start",
+            "POST /api/v1/sessions/{session_id}/interview/answer",
+            "LLM_MODE",
+            "scripts/verify_stack.sh",
         ],
         "README.md",
     )
-    require(Path(".env.example").read_text(encoding="utf-8"), ["DATABASE_URL", "JWT_SECRET"], ".env.example")
-    require(Path("docker-compose.yml").read_text(encoding="utf-8"), ["backend:", "db:", "healthcheck:"], "docker-compose.yml")
+    require(
+        Path(".env.example").read_text(encoding="utf-8"),
+        ["DATABASE_URL", "JWT_SECRET", "LLM_MODE", "RESUME_PARSER_URL", "MAX_RESUME_BYTES"],
+        ".env.example",
+    )
+    require(
+        Path("docker-compose.yml").read_text(encoding="utf-8"),
+        ["backend:", "resume-parser:", "db:", "healthcheck:", "LLM_MODE"],
+        "docker-compose.yml",
+    )
     print("documentation contract verified")
 
 
 if __name__ == "__main__":
     main()
-

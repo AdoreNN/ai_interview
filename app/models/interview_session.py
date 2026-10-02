@@ -4,7 +4,7 @@ import enum
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum as SqlEnum
+from sqlalchemy import JSON, Enum as SqlEnum
 from sqlalchemy import ForeignKey, Index, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -65,5 +65,7 @@ class InterviewSession(TimestampMixin, Base):
         default=SessionStatus.CREATED,
         server_default=SessionStatus.CREATED.value,
     )
+    resume_context: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    interview_state: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="sessions")

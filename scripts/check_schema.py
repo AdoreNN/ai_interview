@@ -21,10 +21,15 @@ def main() -> None:
         indexes = {item["name"] for item in inspector.get_indexes("sessions")}
         if "ix_sessions_user_id" not in indexes:
             raise SystemExit("sessions.user_id index is missing")
+        columns = {item["name"] for item in inspector.get_columns("sessions")}
+        required_columns = {"resume_context", "interview_state"}
+        if not required_columns.issubset(columns):
+            raise SystemExit(
+                f"missing integrated session columns: {sorted(required_columns - columns)}"
+            )
     elif domain_tables & tables:
         raise SystemExit(f"domain tables still present: {sorted(domain_tables & tables)}")
 
 
 if __name__ == "__main__":
     main()
-

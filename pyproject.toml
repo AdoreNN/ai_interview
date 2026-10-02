@@ -15,18 +15,19 @@ dependencies = [
   "langchain-core>=1.6.6",
   "langchain-gigachat>=0.5.1",
   "langgraph>=1.2.12",
+  "httpx==0.28.1",
   "psycopg[binary]==3.2.10",
   "pwdlib[argon2]==0.2.1",
   "pydantic-settings==2.10.1",
   "PyJWT==2.10.1",
   "pypdf>=6.19.0",
+  "python-multipart==0.0.20",
   "SQLAlchemy==2.0.43",
   "uvicorn[standard]==0.35.0",
 ]
 
 [dependency-groups]
 dev = [
-  "httpx==0.28.1",
   "pytest==8.4.2",
   "pytest-cov==6.2.1",
 ]

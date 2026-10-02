@@ -18,13 +18,13 @@ router = APIRouter(prefix="/sessions", tags=["interview-sessions"])
 def create_session(
     payload: SessionCreate, db: DbSession, current_user: CurrentUser
 ) -> SessionResponse:
-    return SessionResponse.model_validate(create_interview_session(db, current_user, payload))
+    return SessionResponse.from_orm_session(create_interview_session(db, current_user, payload))
 
 
 @router.get("", response_model=list[SessionResponse])
 def list_sessions(db: DbSession, current_user: CurrentUser) -> list[SessionResponse]:
     return [
-        SessionResponse.model_validate(item)
+        SessionResponse.from_orm_session(item)
         for item in list_interview_sessions(db, current_user)
     ]
 
@@ -33,5 +33,4 @@ def list_sessions(db: DbSession, current_user: CurrentUser) -> list[SessionRespo
 def retrieve_session(
     session_id: uuid.UUID, db: DbSession, current_user: CurrentUser
 ) -> SessionResponse:
-    return SessionResponse.model_validate(get_interview_session(db, current_user, session_id))
-
+    return SessionResponse.from_orm_session(get_interview_session(db, current_user, session_id))

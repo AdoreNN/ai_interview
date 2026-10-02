@@ -28,6 +28,17 @@ class SessionResponse(BaseModel):
     target_position: str
     experience_level: ExperienceLevel
     status: SessionStatus
+    has_resume: bool = False
+    interview_started: bool = False
     created_at: datetime
     updated_at: datetime
 
+    @classmethod
+    def from_orm_session(cls, session) -> "SessionResponse":
+        result = cls.model_validate(session)
+        return result.model_copy(
+            update={
+                "has_resume": session.resume_context is not None,
+                "interview_started": session.interview_state is not None,
+            }
+        )

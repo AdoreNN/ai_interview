@@ -9,6 +9,7 @@ STATUS_CODES = {
     401: "authentication_failed",
     404: "not_found",
     409: "conflict",
+    413: "payload_too_large",
     422: "validation_error",
     503: "service_unavailable",
 }
@@ -45,4 +46,3 @@ async def validation_exception_handler(_: Request, exc: RequestValidationError) 
 def install_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(HTTPException, http_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
-

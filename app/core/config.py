@@ -38,6 +38,24 @@ class Settings(BaseSettings):
     gigachat_verify_ssl: bool = Field(
         default=False, validation_alias="GIGACHAT_VERIFY_SSL"
     )
+    llm_mode: Literal["gigachat", "stub"] = Field(
+        default="gigachat", validation_alias="LLM_MODE"
+    )
+    resume_parser_url: str = Field(
+        default="http://resume-parser:8000", validation_alias="RESUME_PARSER_URL"
+    )
+    max_resume_bytes: int = Field(
+        default=5_000_000, ge=1, le=20_000_000, validation_alias="MAX_RESUME_BYTES"
+    )
+    interview_hr_questions: int = Field(
+        default=2, ge=0, le=10, validation_alias="INTERVIEW_HR_QUESTIONS"
+    )
+    interview_tech_questions: int = Field(
+        default=3, ge=0, le=20, validation_alias="INTERVIEW_TECH_QUESTIONS"
+    )
+    interview_manager_questions: int = Field(
+        default=2, ge=0, le=10, validation_alias="INTERVIEW_MANAGER_QUESTIONS"
+    )
 
     @field_validator("database_url")
     @classmethod
@@ -54,4 +72,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-
