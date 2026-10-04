@@ -79,6 +79,7 @@ class Stats(BaseModel):
 
 
 class Feedback(BaseModel):
+    """Итоговый фидбек кандидату."""
     summary: str = Field(description="Общее впечатление в 3-5 предложениях: уровень, главный вывод, что делать дальше.")
     strengths: list[str] = Field(description="Сильные стороны, подтверждённые оценками. Пустой список, если их нет.")
     weaknesses: list[str] = Field(description="Слабые места: конкретно что и по какой теме не получилось.")
