@@ -199,7 +199,7 @@ analyst_agent/
 ## Тесты
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 pytest -q # 28 тестов
 ```
 
