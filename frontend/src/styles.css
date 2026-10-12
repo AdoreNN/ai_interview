@@ -133,6 +133,21 @@ svg {
   letter-spacing: -0.04em;
 }
 
+.brand--button,
+.brand--link {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-decoration: none;
+}
+
+.brand--button:hover .brand-mark,
+.brand--link:hover .brand-mark {
+  background: #e4ff91;
+  transform: translateY(-1px);
+}
+
 .brand-mark {
   display: inline-flex;
   align-items: center;
@@ -145,6 +160,7 @@ svg {
   font-family: var(--mono);
   font-size: 17px;
   font-weight: 800;
+  transition: 140ms ease;
 }
 
 .demo-badge,
@@ -1317,48 +1333,6 @@ kbd {
   line-height: 1.6;
 }
 
-.auth-preview {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  max-width: 630px;
-  grid-template-columns: 8px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 15px;
-  padding: 16px 18px;
-  border: 1px solid #303033;
-  border-radius: 13px;
-  background: rgba(23, 23, 24, 0.88);
-  backdrop-filter: blur(12px);
-}
-
-.preview-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 5px var(--accent-soft);
-}
-
-.auth-preview small {
-  color: var(--muted-2);
-  font-family: var(--mono);
-  font-size: 8.5px;
-  letter-spacing: 0.08em;
-}
-
-.auth-preview p {
-  margin: 5px 0 0;
-  color: #cfcfca;
-  font-size: 12.5px;
-}
-
-.preview-score {
-  color: var(--accent);
-  font-family: var(--mono);
-  font-size: 19px;
-}
-
 .auth-form-wrap {
   display: flex;
   align-items: center;
@@ -1435,10 +1409,6 @@ kbd {
 
   .auth-story {
     padding: 28px;
-  }
-
-  .auth-preview {
-    display: none;
   }
 
   .auth-copy h1 {

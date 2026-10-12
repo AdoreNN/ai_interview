@@ -264,11 +264,16 @@ function AuthScreen({
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (isSignUp && password !== passwordConfirmation) {
+      setError("Пароли не совпадают");
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -284,24 +289,16 @@ function AuthScreen({
   return (
     <div className="auth-layout">
       <section className="auth-story">
-        <div className="brand brand--large">
+        <a className="brand brand--large brand--link" href="/" aria-label="На главную">
           <span className="brand-mark">g</span>
           <span>grillo</span>
-        </div>
+        </a>
         <div className="auth-copy">
           <p className="eyebrow">AI INTERVIEW PRACTICE</p>
           <h1>Собеседование, после которого становишься сильнее.</h1>
           <p>
             Персональные вопросы по вашему резюме, честная оценка ответов и понятный план роста.
           </p>
-        </div>
-        <div className="auth-preview" aria-hidden="true">
-          <span className="preview-dot" />
-          <div>
-            <small>GRILLO · TECH</small>
-            <p>Как бы вы объяснили это решение команде?</p>
-          </div>
-          <span className="preview-score">8.4</span>
         </div>
       </section>
 
@@ -339,6 +336,24 @@ function AuthScreen({
             />
           </label>
 
+          {isSignUp && (
+            <label>
+              <span>Повторите пароль</span>
+              <input
+                type="password"
+                value={passwordConfirmation}
+                onChange={(event) => {
+                  setPasswordConfirmation(event.target.value);
+                  if (error === "Пароли не совпадают") setError("");
+                }}
+                placeholder="Введите пароль ещё раз"
+                autoComplete="new-password"
+                minLength={8}
+                required
+              />
+            </label>
+          )}
+
           {error && <p className="form-error">{error}</p>}
 
           <button className="button button--primary button--wide" disabled={loading} type="submit">
@@ -352,7 +367,14 @@ function AuthScreen({
 
           <p className="auth-switch">
             {isSignUp ? "Уже есть аккаунт?" : "Впервые здесь?"}{" "}
-            <button type="button" onClick={() => setIsSignUp((value) => !value)}>
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp((value) => !value);
+                setPasswordConfirmation("");
+                setError("");
+              }}
+            >
               {isSignUp ? "Войти" : "Зарегистрироваться"}
             </button>
           </p>
@@ -392,11 +414,11 @@ function Sidebar({
       />
       <aside className={`sidebar ${open ? "is-open" : ""}`}>
         <div className="sidebar-head">
-          <div className="brand">
+          <button className="brand brand--button" type="button" onClick={onNew} aria-label="На главную">
             <span className="brand-mark">g</span>
             <span>grillo</span>
             {demoMode && <span className="demo-badge">demo</span>}
-          </div>
+          </button>
           <button className="icon-button mobile-only" aria-label="Закрыть меню" onClick={onClose}>
             <Icon name="close" />
           </button>
