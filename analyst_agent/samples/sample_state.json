@@ -1,0 +1,36 @@
+{
+  "session_id": "demo-001",
+  "target_position": "Python backend developer",
+  "experience_level": "middle",
+  "resume_topics": ["Python", "FastAPI", "PostgreSQL", "asyncio", "Docker"],
+  "resume_expirience": {"Python": 3, "PostgreSQL": 2},
+  "messages": [
+    {"role": "assistant", "content": "Почему вам интересна работа backend-разработчика?"},
+    {"role": "user", "content": "Нравится строить сервисы, которые выдерживают нагрузку. На прошлом месте я переписал сервис выгрузок отчётов, время ответа упало с 12 секунд до 2, потому что вынес тяжёлые запросы в фоновые задачи."},
+    {"role": "assistant", "content": "Расскажите о конфликте в команде и как вы его решали."},
+    {"role": "user", "content": "Конфликтов особо не было, все нормально общались."},
+    {"role": "assistant", "content": "В чём разница между threading и asyncio и когда вы выберете asyncio?"},
+    {"role": "user", "content": "asyncio — кооперативная многозадачность в одном потоке, подходит для I/O: сеть, БД. Для CPU-задач он не поможет, там процессы. Из-за GIL потоки тоже не ускоряют вычисления. Блокирующий вызов внутри корутины подвесит весь event loop."},
+    {"role": "assistant", "content": "Как ускорить медленный SQL-запрос с JOIN нескольких таблиц?"},
+    {"role": "user", "content": "Добавить индексы на поля, по которым соединяю, и посмотреть EXPLAIN."},
+    {"role": "assistant", "content": "Как работает декоратор с параметрами?"},
+    {"role": "user", "content": "Это функция, которая принимает параметры и возвращает декоратор, а тот уже оборачивает функцию. Три уровня вложенности, functools.wraps нужен, чтобы сохранить имя и docstring. Использовал для ретраев и кеша с TTL."},
+    {"role": "assistant", "content": "Как вы планируете работу над задачей на две недели?"},
+    {"role": "user", "content": "Просто начинаю делать и смотрю, как пойдёт."}
+  ],
+  "evaluation_log": [
+    {"skill": "hr.motivation", "score": 7, "reason": "Назвал конкретный проект и измеримый результат, но не объяснил выбор профессии глубже."},
+    {"skill": "hr.conflict", "score": 3, "reason": "Уклонился от вопроса, примера нет."},
+    {"skill": "tech.async", "score": 8, "reason": "Верно разделил I/O и CPU, упомянул GIL и блокировку event loop."},
+    {"skill": "tech.sql", "score": 5, "reason": "Назвал индексы и EXPLAIN, но без деталей: порядок JOIN, типы индексов, чтение плана."},
+    {"skill": "tech.decorators", "score": 9, "reason": "Полное объяснение с wraps и практическими примерами."},
+    {"skill": "manager.planning", "score": 3, "reason": "Нет декомпозиции, оценки сроков и работы с рисками."}
+  ],
+  "skills": {
+    "hr.motivation": [7], "hr.conflict": [3], "tech.async": [8],
+    "tech.sql": [5], "tech.decorators": [9], "manager.planning": [3]
+  },
+  "weaknesses": ["Уклоняется от вопросов о конфликтах", "Нет навыков планирования и декомпозиции", "Поверхностно знает оптимизацию SQL"],
+  "hr_count": 2, "tech_count": 3, "manager_count": 1,
+  "finished": true
+}
