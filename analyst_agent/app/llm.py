@@ -19,6 +19,17 @@ class LLMOutputError(RuntimeError):
     """LLM не вернула валидный ответ после всех попыток"""
 
 
+STUB_PAYLOADS = {
+    "Feedback": {
+        "summary": "Локальная stub-оценка: запуск без внешнего LLM. Настоящий разбор появится с LLM_MODE=gigachat.",
+        "strengths": ["Stub: ответы получены и оценены интервьюерами."],
+        "weaknesses": ["Stub: подробный разбор слабых тем недоступен без LLM."],
+        "recommendations": ["Stub: подключите GigaChat, чтобы получить персональные рекомендации."],
+    },
+}
+STUB_ANSWER = "Это stub-ответ аналитика: запуск без внешнего LLM. Подключите GigaChat (LLM_MODE=gigachat), чтобы получать содержательные ответы."
+
+
 @lru_cache
 def get_llm(temperature: float = 0.3) -> GigaChat:
     settings = get_settings()
@@ -41,6 +52,8 @@ def invoke_structured(
     """Структурный вывод с ретраями. При отказе в следующую попытку добавляется подсказка,
     что не так, иначе модель просто повторяет ту же ошибку (три одинаковых попытки = одна)
     """
+    if get_settings().llm_mode == "stub":
+        return schema(**STUB_PAYLOADS[schema.__name__])
     llm = get_llm(temperature).with_structured_output(schema)
     msgs = list(messages)
     last_error: Exception | None = None
@@ -66,6 +79,8 @@ def invoke_structured(
 
 
 def invoke_text(messages: list[BaseMessage], temperature: float = 0.3) -> str:
+    if get_settings().llm_mode == "stub":
+        return STUB_ANSWER
     llm = get_llm(temperature)
     for attempt in range(MAX_RETRIES + 1):
         content = llm.invoke(messages).content

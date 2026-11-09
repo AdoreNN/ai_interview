@@ -1,4 +1,6 @@
 from functools import lru_cache
+from typing import Literal
+
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -10,6 +12,8 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    llm_mode: Literal["gigachat", "stub"] = Field(default="gigachat", validation_alias="LLM_MODE")
 
     gigachat_credentials: SecretStr = Field(default=SecretStr(""), validation_alias="GIGACHAT_CREDENTIALS")
     gigachat_scope: str = Field(default="GIGACHAT_API_PERS", validation_alias="GIGACHAT_SCOPE")
