@@ -40,4 +40,5 @@ def test_openapi_contains_integrated_application_routes(client):
         "/api/v1/sessions/{session_id}/interview",
         "/api/v1/sessions/{session_id}/interview/start",
         "/api/v1/sessions/{session_id}/interview/answer",
+        "/api/v1/sessions/{session_id}/feedback/chat",
     }

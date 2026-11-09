@@ -28,3 +28,20 @@ class InterviewResponse(BaseModel):
     final_feedback: dict[str, Any] | None
     evaluation_log: list[dict[str, Any]]
     messages: list[InterviewMessage]
+
+
+class AnalystChatRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    history: list[InterviewMessage] = Field(default_factory=list, max_length=40)
+
+    @field_validator("question")
+    @classmethod
+    def trim_question(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("question must not be blank")
+        return value
+
+
+class AnalystChatResponse(BaseModel):
+    answer: str

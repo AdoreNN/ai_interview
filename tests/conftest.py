@@ -6,6 +6,8 @@ os.environ.setdefault(
 )
 os.environ.setdefault("JWT_SECRET", "test-secret-with-at-least-thirty-two-characters")
 os.environ.setdefault("LLM_MODE", "stub")
+# закрытый порт: тесты не должны ходить в реальный analyst_agent
+os.environ.setdefault("ANALYST_URL", "http://127.0.0.1:9")
 
 import pytest
 from fastapi.testclient import TestClient

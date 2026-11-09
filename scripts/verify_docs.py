@@ -24,6 +24,8 @@ def main() -> None:
             "POST /api/v1/sessions/{session_id}/resume",
             "POST /api/v1/sessions/{session_id}/interview/start",
             "POST /api/v1/sessions/{session_id}/interview/answer",
+            "POST /api/v1/sessions/{session_id}/feedback/chat",
+            "ANALYST_URL",
             "LLM_MODE",
             "scripts/verify_stack.sh",
         ],
@@ -31,12 +33,12 @@ def main() -> None:
     )
     require(
         Path(".env.example").read_text(encoding="utf-8"),
-        ["DATABASE_URL", "JWT_SECRET", "LLM_MODE", "RESUME_PARSER_URL", "MAX_RESUME_BYTES"],
+        ["DATABASE_URL", "JWT_SECRET", "LLM_MODE", "RESUME_PARSER_URL", "ANALYST_URL", "MAX_RESUME_BYTES"],
         ".env.example",
     )
     require(
         Path("docker-compose.yml").read_text(encoding="utf-8"),
-        ["backend:", "resume-parser:", "db:", "healthcheck:", "LLM_MODE"],
+        ["backend:", "resume-parser:", "analyst:", "db:", "healthcheck:", "LLM_MODE"],
         "docker-compose.yml",
     )
     print("documentation contract verified")

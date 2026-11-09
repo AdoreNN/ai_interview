@@ -3,8 +3,13 @@ import uuid
 from fastapi import APIRouter, HTTPException, status
 
 from app.api.dependencies import CurrentUser, DbSession
-from app.schemas.interview import InterviewAnswer, InterviewResponse
-from app.services.interviews import answer_interview, start_interview
+from app.schemas.interview import (
+    AnalystChatRequest,
+    AnalystChatResponse,
+    InterviewAnswer,
+    InterviewResponse,
+)
+from app.services.interviews import answer_interview, ask_analyst, start_interview
 from app.services.sessions import get_interview_session
 
 
@@ -52,3 +57,15 @@ def answer(
 ) -> InterviewResponse:
     interview = get_interview_session(db, current_user, session_id)
     return _response(answer_interview(db, interview, payload.answer))
+
+
+@router.post("/{session_id}/feedback/chat", response_model=AnalystChatResponse)
+def chat_with_analyst(
+    session_id: uuid.UUID,
+    payload: AnalystChatRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> AnalystChatResponse:
+    interview = get_interview_session(db, current_user, session_id)
+    history = [m.model_dump() for m in payload.history]
+    return AnalystChatResponse(answer=ask_analyst(interview, payload.question, history))

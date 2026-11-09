@@ -20,6 +20,7 @@ class InterviewState(TypedDict, total=False):
     # резюме
     resume_topics: list[str]
     resume_experience: dict[str, int]
+    resume_questions: dict[str, list[str]]  # вопросы парсера резюме по этапам: hr / tech / manager
 
     # счетчики для рутирнга
     hr_count: int

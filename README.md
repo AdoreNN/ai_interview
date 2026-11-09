@@ -1,12 +1,13 @@
 # Grillo
 
-Полноценный сервис подготовки к собеседованиям: адаптивный web-интерфейс, авторизация, постоянные интервью-сессии, разбор PDF-резюме и многоэтапное интервью с HR-, technical- и manager-агентами.
+Полноценный сервис подготовки к собеседованиям: адаптивный web-интерфейс, авторизация, постоянные интервью-сессии, разбор PDF-резюме и многоэтапное интервью с HR-, technical- и manager-агентами и итоговый разбор от агента-аналитика.
 
 ## Архитектура
 
 - `frontend` (`http://localhost:3000`) — React/Vite, адаптивный интерфейс и демо-режим;
 - `backend` (`http://localhost:8000`) — FastAPI, JWT, управление сессиями, LangGraph-интервью;
 - `resume-parser` (`http://localhost:8001`) — извлечение текста PDF, анализ резюме, GitHub lookup и генерация персональных вопросов;
+- `analyst` (`http://localhost:8002`) — агент-аналитик: после завершения интервью считает статистику, пишет итоговый фидбек и отвечает на вопросы кандидата;
 - `db` — PostgreSQL 16;
 - таблица `sessions` хранит контекст резюме и состояние интервью между запросами.
 
@@ -17,7 +18,7 @@ cp .env.example .env
 docker compose up --build
 ```
 
-Откройте `http://localhost:3000`. По умолчанию `LLM_MODE=stub`: весь сценарий работает локально без внешнего ключа. Интерфейс также содержит демо-режим, который можно посмотреть без регистрации. Swagger backend доступен на `http://localhost:8000/docs`, parser — на `http://localhost:8001/docs`.
+Откройте `http://localhost:3000`. По умолчанию `LLM_MODE=stub`: весь сценарий работает локально без внешнего ключа. Интерфейс также содержит демо-режим, который можно посмотреть без регистрации. Swagger backend доступен на `http://localhost:8000/docs`, parser — на `http://localhost:8001/docs`, analyst — на `http://localhost:8002/docs`.
 
 Для реального GigaChat укажите в `.env`:
 
@@ -48,6 +49,7 @@ docker compose down
 | `GET /api/v1/sessions/{session_id}/interview` | Bearer | Возобновить интервью и получить историю диалога |
 | `POST /api/v1/sessions/{session_id}/interview/start` | Bearer | Начать интервью |
 | `POST /api/v1/sessions/{session_id}/interview/answer` | Bearer | Отправить ответ и получить следующий вопрос/итог |
+| `POST /api/v1/sessions/{session_id}/feedback/chat` | Bearer | Задать вопрос аналитику по итогам завершённого интервью (`{"question", "history"}`) |
 
 Создание сессии:
 
@@ -65,6 +67,10 @@ docker compose down
 {"answer": "На проекте я измерил проблему и изменил план выполнения."}
 ```
 
+Вопросы, сгенерированные парсером по резюме, передаются агентам этапов (`hr` / `tech` / `manager`) по полю `target_agent` и добавляются в их промпт как заготовки.
+
+При завершении интервью backend отправляет итоговое состояние в analyst и кладёт ответ в `final_feedback.analyst` (`stats` + `feedback`). Если analyst недоступен, интервью всё равно завершается, а `final_feedback` содержит только `skill_averages` и `weaknesses`.
+
 Допустимые уровни: `intern`, `junior`, `middle`, `senior`. Все операции с сессией проверяют владельца. Повторный старт и ответ до старта или после завершения возвращают `409`.
 
 ## Конфигурация
@@ -79,6 +85,7 @@ docker compose down
 | `GIGACHAT_*` | Credential, scope, model и SSL-настройка GigaChat |
 | `GITHUB_TOKEN` | Необязательный токен для увеличения лимита GitHub API |
 | `RESUME_PARSER_URL` | Внутренний URL parser-сервиса |
+| `ANALYST_URL`, `ANALYST_TIMEOUT`, `ANALYST_PORT` | Внутренний URL, таймаут (сек) и порт на хосте для analyst-сервиса |
 | `MAX_RESUME_BYTES`, `MAX_RESUME_CHARS` | Лимиты PDF и извлечённого текста |
 | `INTERVIEW_*_QUESTIONS` | Количество вопросов каждого этапа |
 | `FRONTEND_PORT`, `BACKEND_PORT`, `RESUME_PARSER_PORT` | Порты сервисов на хосте |

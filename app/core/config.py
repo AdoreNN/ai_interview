@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     resume_parser_url: str = Field(
         default="http://resume-parser:8000", validation_alias="RESUME_PARSER_URL"
     )
+    analyst_url: str = Field(default="http://analyst:8000", validation_alias="ANALYST_URL")
+    analyst_timeout: float = Field(default=90.0, gt=0, validation_alias="ANALYST_TIMEOUT")
     max_resume_bytes: int = Field(
         default=5_000_000, ge=1, le=20_000_000, validation_alias="MAX_RESUME_BYTES"
     )

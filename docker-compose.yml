@@ -43,6 +43,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
       RESUME_PARSER_URL: http://resume-parser:8000
+      ANALYST_URL: http://analyst:8000
       MAX_RESUME_BYTES: ${MAX_RESUME_BYTES:-5000000}
       INTERVIEW_HR_QUESTIONS: ${INTERVIEW_HR_QUESTIONS:-2}
       INTERVIEW_TECH_QUESTIONS: ${INTERVIEW_TECH_QUESTIONS:-3}
@@ -58,6 +59,8 @@ services:
       db:
         condition: service_healthy
       resume-parser:
+        condition: service_healthy
+      analyst:
         condition: service_healthy
     healthcheck:
       test:
@@ -91,6 +94,34 @@ services:
       MAX_QUESTIONS: ${MAX_QUESTIONS:-8}
     ports:
       - "${RESUME_PARSER_PORT:-8001}:8000"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+    networks:
+      - grillo
+
+  analyst:
+    build:
+      context: ./analyst_agent
+      dockerfile: Dockerfile
+    environment:
+      LLM_MODE: ${LLM_MODE:-stub}
+      GIGACHAT_CREDENTIALS: ${GIGACHAT_CREDENTIALS:-}
+      GIGACHAT_SCOPE: ${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
+      GIGACHAT_MODEL: ${GIGACHAT_MODEL:-GigaChat-2-Pro}
+      GIGACHAT_VERIFY_SSL: ${GIGACHAT_VERIFY_SSL:-false}
+    ports:
+      - "${ANALYST_PORT:-8002}:8000"
     healthcheck:
       test:
         [
