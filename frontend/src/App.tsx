@@ -821,7 +821,7 @@ function InterviewView({
           )}
 
           {interview.status === "completed" && interview.final_feedback && (
-            <FeedbackCard interview={interview} />
+            <FeedbackCard interview={interview} sessionId={session.id} token={token} demoMode={demoMode} />
           )}
           <div ref={endRef} />
         </div>
@@ -888,16 +888,47 @@ function Message({ message, isLatest }: { message: ChatMessage; isLatest: boolea
   );
 }
 
-function FeedbackCard({ interview }: { interview: InterviewResponse }) {
+function GrowthList({ label, items }: { label: string; items: string[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="growth-list">
+      <p className="section-label">{label}</p>
+      {items.map((item, index) => (
+        <div key={`${index}-${item.slice(0, 16)}`}><span>0{index + 1}</span><p>{item}</p></div>
+      ))}
+    </div>
+  );
+}
+
+function FeedbackCard({
+  interview,
+  sessionId,
+  token,
+  demoMode,
+}: {
+  interview: InterviewResponse;
+  sessionId: string;
+  token: string;
+  demoMode: boolean;
+}) {
+  const analyst = interview.final_feedback?.analyst;
   const scores = Object.entries(interview.final_feedback?.skill_averages ?? {});
-  const average = scores.length ? scores.reduce((sum, [, value]) => sum + value, 0) / scores.length : 0;
+  const computed = scores.length ? scores.reduce((sum, [, value]) => sum + value, 0) / scores.length : 0;
+  const average = analyst?.stats.overall_score ?? computed;
+  const weaknesses = analyst?.feedback.weaknesses ?? interview.final_feedback?.weaknesses ?? [];
   return (
     <section className="feedback-card">
       <div className="feedback-head">
         <div>
-          <p className="eyebrow">ИТОГИ ИНТЕРВЬЮ</p>
-          <h2>Хорошая работа.</h2>
-          <p>Вы уверенно прошли основные блоки. Ниже — то, что уже получается, и точки роста.</p>
+          <p className="eyebrow">
+            ИТОГИ ИНТЕРВЬЮ{analyst?.stats.overall_band_label ? ` · ${analyst.stats.overall_band_label.toUpperCase()}` : ""}
+          </p>
+          <h2>{analyst ? "Разбор аналитика" : "Хорошая работа."}</h2>
+          <p>
+            {analyst
+              ? analyst.feedback.summary
+              : "Вы уверенно прошли основные блоки. Ниже — то, что уже получается, и точки роста."}
+          </p>
         </div>
         <div className="total-score"><strong>{average.toFixed(1)}</strong><span>/ 10</span></div>
       </div>
@@ -909,15 +940,62 @@ function FeedbackCard({ interview }: { interview: InterviewResponse }) {
           </div>
         ))}
       </div>
-      {(interview.final_feedback?.weaknesses?.length ?? 0) > 0 && (
-        <div className="growth-list">
-          <p className="section-label">ТОЧКИ РОСТА</p>
-          {interview.final_feedback?.weaknesses?.map((item, index) => (
-            <div key={item}><span>0{index + 1}</span><p>{item}</p></div>
-          ))}
-        </div>
-      )}
+      {analyst && <GrowthList label="СИЛЬНЫЕ СТОРОНЫ" items={analyst.feedback.strengths} />}
+      <GrowthList label="ТОЧКИ РОСТА" items={weaknesses} />
+      {analyst && <GrowthList label="РЕКОМЕНДАЦИИ" items={analyst.feedback.recommendations} />}
+      {analyst && !demoMode && <AnalystChat sessionId={sessionId} token={token} />}
     </section>
+  );
+}
+
+function AnalystChat({ sessionId, token }: { sessionId: string; token: string }) {
+  const [history, setHistory] = useState<ChatMessage[]>([]);
+  const [question, setQuestion] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function send(event: FormEvent) {
+    event.preventDefault();
+    const value = question.trim();
+    if (!value || busy) return;
+    setQuestion("");
+    setError("");
+    setBusy(true);
+    try {
+      const { answer } = await api.chatWithAnalyst(token, sessionId, value, history);
+      setHistory([...history, { role: "user", content: value }, { role: "assistant", content: answer }]);
+    } catch (caught) {
+      setQuestion(value);
+      setError(caught instanceof ApiError ? caught.message : "Не удалось получить ответ аналитика");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="analyst-chat">
+      <p className="section-label">СПРОСИТЕ АНАЛИТИКА</p>
+      {history.map((message, index) => (
+        <div className={`analyst-chat-message analyst-chat-message--${message.role}`} key={`${index}-${message.content.slice(0, 12)}`}>
+          <span>{message.role === "user" ? "вы" : "аналитик"}</span>
+          <p>{message.content}</p>
+        </div>
+      ))}
+      {busy && <div className="analyst-chat-message analyst-chat-message--assistant"><span>аналитик</span><p>думаю…</p></div>}
+      {error && <p className="analyst-chat-error" role="alert">{error}</p>}
+      <form className="analyst-chat-form" onSubmit={send}>
+        <input
+          value={question}
+          onChange={(event) => setQuestion(event.target.value)}
+          placeholder="Например: с чего начать подтягивать слабые темы?"
+          maxLength={2000}
+          aria-label="Вопрос аналитику"
+        />
+        <button className="send-button" type="submit" disabled={busy || !question.trim()} aria-label="Отправить вопрос">
+          <Icon name="arrow" />
+        </button>
+      </form>
+    </div>
   );
 }
 

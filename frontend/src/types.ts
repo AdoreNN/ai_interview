@@ -31,12 +31,28 @@ export interface Evaluation {
   reason?: string | null;
 }
 
+export interface AnalystStats {
+  answered_questions: number;
+  overall_score: number | null;
+  overall_band_label: string | null;
+  is_preliminary: boolean;
+  by_agent: Record<string, number>;
+}
+
+export interface AnalystFeedback {
+  summary: string;
+  strengths: string[];
+  weaknesses: string[];
+  recommendations: string[];
+}
+
 export interface InterviewResponse {
   status: SessionStatus;
   current_question: string | null;
   final_feedback: {
     skill_averages?: Record<string, number>;
     weaknesses?: string[];
+    analyst?: { stats: AnalystStats; feedback: AnalystFeedback };
   } | null;
   evaluation_log: Evaluation[];
   messages: ChatMessage[];

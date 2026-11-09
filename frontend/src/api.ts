@@ -1,5 +1,6 @@
 import type {
   AuthResponse,
+  ChatMessage,
   ExperienceLevel,
   InterviewResponse,
   InterviewSession,
@@ -89,6 +90,13 @@ export const api = {
     request<InterviewResponse>(
       `/sessions/${sessionId}/interview/answer`,
       { method: "POST", body: JSON.stringify({ answer }) },
+      token,
+    ),
+
+  chatWithAnalyst: (token: string, sessionId: string, question: string, history: ChatMessage[]) =>
+    request<{ answer: string }>(
+      `/sessions/${sessionId}/feedback/chat`,
+      { method: "POST", body: JSON.stringify({ question, history }) },
       token,
     ),
 };
