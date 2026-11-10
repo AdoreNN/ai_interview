@@ -7,7 +7,7 @@ DEBUG = os.getenv("DEBUG_EVAL") == "1"
 
 
 def main(only: str | None) -> None:
-    limits = {"hr": 3, "tech": 5, "manager": 2}
+    limits = {"hr": 3, "tech": 4, "manager": 3}  # темы на этап
     if only:
         limits = {k: (v if k == only else 0) for k, v in limits.items()}
 
@@ -23,6 +23,7 @@ def main(only: str | None) -> None:
         "finished": False,
         "hr_count": 0, "tech_count": 0, "manager_count": 0,
         "max_hr": limits["hr"], "max_tech": limits["tech"], "max_manager": limits["manager"],
+        "followups": 0, "max_followups": 2,
     }
 
     while True:

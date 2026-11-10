@@ -27,7 +27,7 @@ def test_interview_runs_to_completion_and_persists_state(client):
     assert resumed.json()["messages"] == started.json()["messages"]
 
     turn = started
-    for _ in range(10):
+    for _ in range(30):
         turn = client.post(
             f"/api/v1/sessions/{session['id']}/interview/answer",
             headers=auth(token),
@@ -41,7 +41,8 @@ def test_interview_runs_to_completion_and_persists_state(client):
     assert body["status"] == "completed"
     assert body["current_question"] is None
     assert body["final_feedback"]["skill_averages"]
-    assert len(body["evaluation_log"]) == 7
+    # stub всегда переходит к новой теме: 3 + 4 + 3 темы по умолчанию
+    assert len(body["evaluation_log"]) == 10
 
     retrieved = client.get(
         f"/api/v1/sessions/{session['id']}", headers=auth(token)

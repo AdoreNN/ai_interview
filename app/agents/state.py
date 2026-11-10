@@ -29,6 +29,8 @@ class InterviewState(TypedDict, total=False):
     max_hr: int
     max_tech: int
     max_manager: int
+    followups: int  # уточняющих вопросов по текущей теме этапа
+    max_followups: int
 
     skills: dict[str, list[int]] # оценки по каждым аспектам ({"hr.teamwork": [7], "tech.async": [6]} и тд)
     pending_skill: str | None # ключ навыка(топика) текущего вопроса

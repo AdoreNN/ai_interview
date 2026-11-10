@@ -87,7 +87,8 @@ docker compose down
 | `RESUME_PARSER_URL` | Внутренний URL parser-сервиса |
 | `ANALYST_URL`, `ANALYST_TIMEOUT`, `ANALYST_PORT` | Внутренний URL, таймаут (сек) и порт на хосте для analyst-сервиса |
 | `MAX_RESUME_BYTES`, `MAX_RESUME_CHARS` | Лимиты PDF и извлечённого текста |
-| `INTERVIEW_*_QUESTIONS` | Количество вопросов каждого этапа |
+| `INTERVIEW_HR_TOPICS`, `INTERVIEW_TECH_TOPICS`, `INTERVIEW_MANAGER_TOPICS` | Сколько разных тем обсуждает каждый этап (по умолчанию 3 / 4 / 3) |
+| `INTERVIEW_MAX_FOLLOWUPS` | Сколько уточняющих вопросов можно задать по одной теме (по умолчанию 2) |
 | `FRONTEND_PORT`, `BACKEND_PORT`, `RESUME_PARSER_PORT` | Порты сервисов на хосте |
 
 ## Frontend

@@ -49,14 +49,18 @@ class Settings(BaseSettings):
     max_resume_bytes: int = Field(
         default=5_000_000, ge=1, le=20_000_000, validation_alias="MAX_RESUME_BYTES"
     )
-    interview_hr_questions: int = Field(
-        default=2, ge=0, le=10, validation_alias="INTERVIEW_HR_QUESTIONS"
+    # бюджет этапа в темах; уточняющие вопросы по теме считаются отдельно
+    interview_hr_topics: int = Field(
+        default=3, ge=0, le=10, validation_alias="INTERVIEW_HR_TOPICS"
     )
-    interview_tech_questions: int = Field(
-        default=3, ge=0, le=20, validation_alias="INTERVIEW_TECH_QUESTIONS"
+    interview_tech_topics: int = Field(
+        default=4, ge=0, le=10, validation_alias="INTERVIEW_TECH_TOPICS"
     )
-    interview_manager_questions: int = Field(
-        default=2, ge=0, le=10, validation_alias="INTERVIEW_MANAGER_QUESTIONS"
+    interview_manager_topics: int = Field(
+        default=3, ge=0, le=10, validation_alias="INTERVIEW_MANAGER_TOPICS"
+    )
+    interview_max_followups: int = Field(
+        default=2, ge=0, le=5, validation_alias="INTERVIEW_MAX_FOLLOWUPS"
     )
 
     @field_validator("database_url")

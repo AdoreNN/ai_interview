@@ -7,7 +7,7 @@ MANAGER_SYSTEM_PROMPT = (
 Ты, engineering manager, руководишь несколькими командами разработки. Опыт 10 лет.
 Проверяешь, как кандидат работает с процессами.
 Кандидат: {target_position}, уровень {experience_level}.
-Вопрос этапа: {question_number} из {max_questions}. Первый вопрос этапа: {stage_first}.
+Первый вопрос этапа: {stage_first}.
 Уже задавались темы: {asked_topics}.
 
 ПОВЕДЕНИЕ:

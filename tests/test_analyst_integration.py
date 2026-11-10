@@ -22,7 +22,7 @@ REPORT = {
 def run_interview(client, token: str) -> dict:
     session = client.post("/api/v1/sessions", json=VALID_SESSION, headers=auth(token)).json()
     client.post(f"/api/v1/sessions/{session['id']}/interview/start", headers=auth(token))
-    for _ in range(10):
+    for _ in range(30):
         turn = client.post(
             f"/api/v1/sessions/{session['id']}/interview/answer",
             headers=auth(token),

@@ -14,9 +14,12 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 2
 
 RETRY_HINT = (
-    "Предыдущий ответ отклонён: кандидат уже ответил, поэтому ОБЯЗАТЕЛЬНО заполни reason "
-    "и evaluation (0-10) для его последнего ответа. reaction не заменяет оценку."
+    "Предыдущий ответ отклонён. Заполни все поля: если кандидат уже ответил, ОБЯЗАТЕЛЬНО reason "
+    "и evaluation (0-10), reaction не заменяет оценку; move_on по правилам из ПЛАНА ЭТАПА; "
+    "question не пустой, если этап не завершается."
 )
+
+DEFAULT_MAX_FOLLOWUPS = 2
 
 
 class LLMOutputError(RuntimeError):
@@ -53,6 +56,7 @@ def _invoke_structured(schema: type[BaseModel], messages: list[BaseMessage], is_
         except (ValidationError, OutputParserException) as e:
             last_error = e
             logger.warning("Invalid LLM output (attempt %s): %s", attempt + 1, e)
+            attempt_messages = [*messages, HumanMessage(content=RETRY_HINT)]
     raise LLMOutputError(f"LLM не вернула валидный {schema.__name__}") from last_error
 
 
@@ -86,28 +90,72 @@ def _stage_start_note(state: InterviewState, count_key: str) -> str:
     )
 
 
+def _clean(text: str | None) -> str:
+    """GigaChat иногда кладёт в пустое строковое поле буквальное "null" или одну пунктуацию."""
+    text = (text or "").strip()
+    if text.lower() in {"null", "none"} or not re.search(r"\w", text):
+        return ""
+    return text
+
+
+def _strip_questions(reaction: str | None) -> str:
+    """Вопросы из реакции выкидываем: модель иначе дублирует в ней вопрос из question."""
+    sentences = re.split(r"(?<=[.!?…])\s+", _clean(reaction))
+    return " ".join(s for s in sentences if s and not s.rstrip().endswith("?"))
+
+
 def _compose_reply(reaction: str | None, question: str) -> str:
-    """Реакция + вопрос одной репликой; вопросы из реакции выкидываем, иначе модель их дублирует."""
-    sentences = re.split(r"(?<=[.!?…])\s+", (reaction or "").strip())
-    kept = " ".join(s for s in sentences if s and not s.rstrip().endswith("?"))
-    return f"{kept} {question}" if kept else question
+    return " ".join(part for part in (_strip_questions(reaction), _clean(question)) if part)
+
+
+def _topic_plan_block(state: InterviewState, count_key: str, max_key: str) -> str:
+    """Бюджет этапа в темах: сколько тем пройдено и сколько уточнений осталось по текущей."""
+    count = state.get(count_key, 0)
+    max_topics = state.get(max_key, 1)
+    followups = state.get("followups", 0)
+    max_followups = state.get("max_followups", DEFAULT_MAX_FOLLOWUPS)
+    if count == 0:
+        return (
+            f"\n\nПЛАН ЭТАПА: {max_topics} разных темы, сейчас первая. По каждой теме можно задать "
+            f"до {max_followups} уточняющих вопросов, потом переходи к следующей теме."
+        )
+    lines = [
+        f"\n\nПЛАН ЭТАПА: тема {count} из {max_topics}, уточняющих вопросов по ней уже {followups} из {max_followups}.",
+        "move_on = false: уточняющий вопрос по текущей теме, если ответ поверхностный или есть что копнуть.",
+        "move_on = true: тема раскрыта, задай вопрос по НОВОЙ теме, которую в этом этапе ещё не обсуждали.",
+        "Не застревай на одной теме: обычно хватает одного-двух уточнений.",
+    ]
+    if followups >= max_followups:
+        lines.append("Уточнения по текущей теме исчерпаны: обязательно move_on = true.")
+    if count >= max_topics:
+        if _is_last_stage(state, count_key):
+            end = "в reaction коротко отреагируй и попрощайся: интервью закончится"
+        else:
+            end = "в reaction коротко отреагируй и скажи, что дальше вопросы задаст коллега"
+        lines.append(
+            "Это заключительная тема твоего этапа. Если она раскрыта, поставь move_on = true, "
+            f"question оставь пустым, а {end}. Не говори про следующую тему: твой этап заканчивается."
+        )
+    return "\n".join(lines)
 
 
 def _build_prompt(
     state: InterviewState, template: str, count_key: str, max_key: str, agent: str | None = None
 ) -> str:
     count = state.get(count_key, 0)
-    max_questions = state.get(max_key, 1)
     prompt = template.format(
         target_position=state.get("target_position", "Python developer"),
         experience_level=state.get("experience_level", "junior"),
-        question_number=min(count + 1, max_questions),
-        max_questions=max_questions,
         stage_first="да" if count == 0 else "нет",
         asked_topics=", ".join(state.get("asked_topics", [])) or "нет",
         resume_topics=", ".join(state.get("resume_topics", [])) or "нет данных",
     )
-    return prompt + _stage_start_note(state, count_key) + _resume_questions_block(state, agent)
+    return (
+        prompt
+        + _topic_plan_block(state, count_key, max_key)
+        + _stage_start_note(state, count_key)
+        + _resume_questions_block(state, agent)
+    )
 
 
 def _record_eval(state: InterviewState, turn: Any) -> dict:
@@ -146,7 +194,7 @@ def _close_stage(state: InterviewState, prompt: str, count_key: str) -> dict:
             "в reaction коротко отреагируй на ответ и скажи, что дальше интервью продолжит коллега."
         )
     prompt += (
-        "\n\nЭто был ПОСЛЕДНИЙ вопрос твоего этапа. Новый вопрос НЕ задавай: "
+        "\n\nТемы и уточнения твоего этапа исчерпаны. Новый вопрос НЕ задавай: "
         f"оцени последний ответ кандидата, {farewell} Без вопросов."
     )
     turn = _invoke_structured(
@@ -154,13 +202,18 @@ def _close_stage(state: InterviewState, prompt: str, count_key: str) -> dict:
         _to_lc_messages(state, prompt),
         is_valid=lambda t: t.evaluation is not None,
     )
+    return _stage_closed(state, turn, is_last)
+
+
+def _stage_closed(state: InterviewState, turn: Any, is_last: bool) -> dict:
     result = {
         **_record_eval(state, turn),
         "pending_skill": None,
         "current_question": None,
         "last_user_answer": None,
+        "followups": 0,
     }
-    reaction = (turn.reaction or "").strip()
+    reaction = _strip_questions(turn.reaction)
     if not reaction and is_last:
         # на промежуточных этапах переход озвучит следующий агент, а финал должен прозвучать всегда
         reaction = FINAL_FAREWELL
@@ -181,16 +234,36 @@ def run_turn(
     count_key: str,
     max_key: str,
 ) -> dict:
-    """Один ход интервьюера: оценить прошлый ответ + задать следующий вопрос или."""
+    """Один ход интервьюера: оценить прошлый ответ и уточнить тему, перейти к новой или закрыть этап.
+
+    Бюджет этапа в темах (count_key / max_key); уточнения по текущей теме считаются в followups.
+    """
     count = state.get(count_key, 0)
+    max_topics = state.get(max_key, 1)
+    followups = state.get("followups", 0)
+    max_followups = state.get("max_followups", DEFAULT_MAX_FOLLOWUPS)
     prompt = _build_prompt(state, prompt_template, count_key, max_key, agent)
-    if count>=state.get(max_key, 1):
+    if count >= max_topics and followups >= max_followups:
         return _close_stage(state, prompt, count_key)
-    
+
     history = state.get("messages", [])
     needs_eval = bool(state.get("pending_skill")) and bool(history) and history[-1]["role"] == "user"
+    must_move = count > 0 and followups >= max_followups
+    on_last_topic = count >= max_topics
 
-    turn = _invoke_structured(schema, _to_lc_messages(state, prompt), is_valid=lambda t: not needs_eval or t.evaluation is not None)
+    def is_valid(t) -> bool:
+        if needs_eval and t.evaluation is None:
+            return False
+        finishes_stage = on_last_topic and t.move_on
+        return finishes_stage or bool(_clean(t.question))
+
+    turn = _invoke_structured(schema, _to_lc_messages(state, prompt), is_valid=is_valid)
+    if on_last_topic and turn.move_on:
+        return _stage_closed(state, turn, _is_last_stage(state, count_key))
+
+    # лимит уточнений исчерпан, а модель хочет ещё уточнить: считаем ход новой темой,
+    # иначе на упрямой модели этап зацикливается или падает после ретраев
+    new_topic = count == 0 or turn.move_on or must_move
     skill_key = f"{agent}.{turn.topic}"
     reply = _compose_reply(turn.reaction, turn.question)
     return {
@@ -199,9 +272,10 @@ def run_turn(
             *state.get("messages", []),
             {"role": "assistant", "content": reply},
         ],
-        "current_question": turn.question,
+        "current_question": _clean(turn.question),
         "last_user_answer": None,
-        count_key: count + 1,
+        count_key: count + 1 if new_topic else count,
+        "followups": 0 if new_topic else followups + 1,
         "asked_topics": [*state.get("asked_topics", []), skill_key],
         "pending_skill": skill_key,
     }
