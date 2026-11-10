@@ -6,7 +6,7 @@ Level = Literal["intern", "junior", "middle", "senior"]
 class _TurnBase(BaseModel):
     """Ход интервьюера: оценка предыдущего ответа и следующий вопрос."""
     # порядок полей важен, не меняйте пж
-    # обоснование - балл - диагноз - вопрос
+    # обоснование - балл - диагноз - реакция - вопрос (реакция после балла, чтобы совпадала с оценкой)
     reason: str = Field(
         default="",
         description="Обоснование оценки предыдущего ответа. Пусто, если ответа ещё не было.",
@@ -18,6 +18,10 @@ class _TurnBase(BaseModel):
     weakness: str | None = Field(
         default=None,
         description="Конкретная слабость кандидата, выявленная в ответе, или null.",
+    )
+    reaction: str = Field(
+        default="",
+        description="Короткая живая реакция на последний ответ кандидата (одно предложение, без вопросов), звучит перед вопросом. В начале этапа: короткое представление по роли. Не заменяет reason и evaluation.",
     )
     question: str = Field(
         description="Следующий вопрос кандидату."
@@ -46,6 +50,10 @@ class StageEval(BaseModel):
     evaluation: int = Field(ge=0, le=10, description="Оценка последнего ответа 0-10.")
     weakness: str | None = Field(
         default=None, description="Конкретная слабость кандидата или null."
+    )
+    reaction: str = Field(
+        default="",
+        description="Короткая реплика кандидату без вопросов: реакция на ответ и завершение этапа.",
     )
 
 class Score(BaseModel):

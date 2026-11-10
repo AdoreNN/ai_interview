@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,8 @@ from app.agents.graph import interview_graph
 from app.services import analyst
 from app.core.config import get_settings
 from app.models.interview_session import InterviewSession, SessionStatus
+
+logger = logging.getLogger(__name__)
 
 
 def _initial_state(interview: InterviewSession) -> dict:
@@ -44,6 +48,7 @@ def _run_graph(state: dict) -> dict:
     try:
         return interview_graph.invoke(state)
     except Exception as exc:
+        logger.exception("Interview graph failed")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Interview engine is unavailable",

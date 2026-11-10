@@ -16,6 +16,7 @@ class StubStructuredLLM:
                 "reason": "Локальная stub-оценка.",
                 "evaluation": 7,
                 "weakness": None,
+                "reaction": "Понятно, спасибо.",
                 "question": "Расскажите о сложной командной ситуации и вашей личной роли.",
                 "topic": "teamwork",
             },
@@ -23,6 +24,7 @@ class StubStructuredLLM:
                 "reason": "Локальная stub-оценка.",
                 "evaluation": 7,
                 "weakness": None,
+                "reaction": "Ага, ясно.",
                 "question": "Как вы диагностируете медленный SQL-запрос в production?",
                 "topic": "sql",
                 "difficulty": "middle",
@@ -31,6 +33,7 @@ class StubStructuredLLM:
                 "reason": "Локальная stub-оценка.",
                 "evaluation": 7,
                 "weakness": None,
+                "reaction": "Хорошо, понятно.",
                 "question": "Как вы оценивали сроки задачи при неполных требованиях?",
                 "topic": "planning",
             },
@@ -38,6 +41,7 @@ class StubStructuredLLM:
                 "reason": "Локальная stub-оценка для запуска без внешнего LLM.",
                 "evaluation": 7,
                 "weakness": None,
+                "reaction": "Понятно, спасибо за ответ.",
             },
         }
         return self.schema(**payloads[self.schema.__name__])
