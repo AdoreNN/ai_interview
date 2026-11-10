@@ -9,7 +9,13 @@ from app.schemas.interview import (
     InterviewAnswer,
     InterviewResponse,
 )
-from app.services.interviews import answer_interview, ask_analyst, start_interview
+from app.models.interview_session import SessionStatus
+from app.services.interviews import (
+    answer_interview,
+    ask_analyst,
+    interview_progress,
+    start_interview,
+)
 from app.services.sessions import get_interview_session
 
 
@@ -24,6 +30,7 @@ def _response(interview) -> InterviewResponse:
         final_feedback=state.get("final_feedback"),
         evaluation_log=state.get("evaluation_log", []),
         messages=state.get("messages", []),
+        progress=interview_progress(state, interview.status == SessionStatus.COMPLETED),
     )
 
 

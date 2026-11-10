@@ -46,6 +46,20 @@ export interface AnalystFeedback {
   recommendations: string[];
 }
 
+export type StageAgent = "hr" | "tech" | "manager";
+
+export interface StageProgress {
+  agent: StageAgent;
+  topics_total: number;
+  topics_done: number;
+  status: "done" | "current" | "upcoming";
+}
+
+export interface InterviewProgress {
+  percent: number;
+  stages: StageProgress[];
+}
+
 export interface InterviewResponse {
   status: SessionStatus;
   current_question: string | null;
@@ -56,6 +70,8 @@ export interface InterviewResponse {
   } | null;
   evaluation_log: Evaluation[];
   messages: ChatMessage[];
+  // нет в демо-режиме: там прогресс считается на фронте
+  progress?: InterviewProgress;
 }
 
 export interface ResumeResult {

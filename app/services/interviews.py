@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.agents.graph import interview_graph
+from app.agents.routing import STAGES
 from app.services import analyst
 from app.core.config import get_settings
 from app.models.interview_session import InterviewSession, SessionStatus
@@ -44,6 +45,34 @@ def _initial_state(interview: InterviewSession) -> dict:
         "final_feedback": None,
         "finished": False,
     }
+
+
+def interview_progress(state: dict, completed: bool) -> dict:
+    """Этапы и доля пройденных тем; текущая тема считается начатой, но не пройденной."""
+    order = [agent for agent, _, _ in STAGES]
+    current = (state.get("pending_skill") or "").split(".")[0]
+    current_index = order.index(current) if current in order else None
+    stages = []
+    for index, (agent, count_key, max_key) in enumerate(STAGES):
+        total = state.get(max_key, 0)
+        if total <= 0:
+            continue
+        count = min(state.get(count_key, 0), total)
+        if completed or (current_index is not None and index < current_index):
+            stage_status, done = "done", total
+        elif index == current_index:
+            stage_status, done = "current", max(count - 1, 0)
+        elif current_index is None and count >= total:
+            stage_status, done = "done", total
+        else:
+            stage_status, done = "upcoming", 0
+        stages.append(
+            {"agent": agent, "topics_total": total, "topics_done": done, "status": stage_status}
+        )
+    all_topics = sum(stage["topics_total"] for stage in stages)
+    done_topics = sum(stage["topics_done"] for stage in stages)
+    percent = 100 if completed else (round(100 * done_topics / all_topics) if all_topics else 0)
+    return {"percent": percent, "stages": stages}
 
 
 def _run_graph(state: dict) -> dict:

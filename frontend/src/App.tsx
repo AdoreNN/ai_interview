@@ -6,6 +6,8 @@ import type {
   ExperienceLevel,
   InterviewResponse,
   InterviewSession,
+  InterviewProgress,
+  StageAgent,
 } from "./types";
 
 const demoSessions: InterviewSession[] = [
@@ -83,6 +85,30 @@ const demoFollowups = [
   "Какие качественные и количественные данные вы соберёте в первую очередь и почему?",
   "Команда не согласна с вашим решением, а сроки не позволяют провести полноценное исследование. Как будете действовать?",
 ];
+
+const stageLabels: Record<StageAgent, string> = {
+  hr: "HR",
+  tech: "Техника",
+  manager: "Процессы",
+};
+
+const stageOrder: StageAgent[] = ["hr", "tech", "manager"];
+
+// демо-режим без бэкенда: этап определяем по последней оценке
+function demoProgress(interview: InterviewResponse): InterviewProgress {
+  const completed = interview.status === "completed";
+  const last = interview.evaluation_log.at(-1)?.skill.split(".")[0] as StageAgent | undefined;
+  const current = completed ? stageOrder.length : Math.max(0, stageOrder.indexOf(last ?? "hr"));
+  return {
+    percent: completed ? 100 : Math.round((current / stageOrder.length) * 100),
+    stages: stageOrder.map((agent, index) => ({
+      agent,
+      topics_total: 1,
+      topics_done: index < current ? 1 : 0,
+      status: index < current ? "done" : index === current ? "current" : "upcoming",
+    })),
+  };
+}
 
 const experienceLabels: Record<ExperienceLevel, string> = {
   intern: "Intern",
@@ -723,7 +749,9 @@ function InterviewView({
   const endRef = useRef<HTMLDivElement>(null);
   const textarea = useRef<HTMLTextAreaElement>(null);
   const scoreCount = interview.evaluation_log.length;
-  const progress = interview.status === "completed" ? 100 : Math.min(92, 12 + scoreCount * 13);
+  const completed = interview.status === "completed";
+  const progress = interview.progress ?? demoProgress(interview);
+  const barWidth = completed ? 100 : Math.max(progress.percent, 4);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -790,14 +818,23 @@ function InterviewView({
       <div className="progress-strip">
         <div className="progress-meta">
           <span>ПРОГРЕСС</span>
-          <strong>{interview.status === "completed" ? "100%" : `${progress}%`}</strong>
+          <strong>{completed ? 100 : progress.percent}%</strong>
         </div>
-        <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
-        <div className="stage-list">
-          <span className="is-done"><Icon name="check" /> Знакомство</span>
-          <span className={scoreCount > 0 ? "is-current" : ""}>Кейсы</span>
-          <span className={scoreCount > 2 ? "is-current" : ""}>Команда</span>
-          <span className={interview.status === "completed" ? "is-done" : ""}>Итоги</span>
+        <div className="progress-track"><span style={{ width: `${barWidth}%` }} /></div>
+        <div className="stage-list" aria-label="Этапы интервью">
+          {progress.stages.map((stage) => (
+            <span key={stage.agent} className={`is-${stage.status}`} aria-current={stage.status === "current" ? "step" : undefined}>
+              {stage.status === "done" && <Icon name="check" />}
+              {stageLabels[stage.agent]}
+              {stage.status === "current" && stage.topics_total > 1 && (
+                <em title="Текущая тема этапа">{Math.min(stage.topics_done + 1, stage.topics_total)}/{stage.topics_total}</em>
+              )}
+            </span>
+          ))}
+          <span className={completed ? "is-done" : "is-upcoming"}>
+            {completed && <Icon name="check" />}
+            Итоги
+          </span>
         </div>
       </div>
 

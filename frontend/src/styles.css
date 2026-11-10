@@ -898,6 +898,12 @@ svg {
   color: var(--accent);
 }
 
+.stage-list em {
+  margin-left: 3px;
+  color: var(--muted);
+  font-style: normal;
+}
+
 .conversation {
   min-height: 0;
   flex: 1;
